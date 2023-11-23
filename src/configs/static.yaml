@@ -1,0 +1,3 @@
+jinja:
+  dir: templates
+  ads_template: ads_template.html

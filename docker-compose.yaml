@@ -1,0 +1,58 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: luxonis
+      POSTGRES_PASSWORD: luxonis
+    ports:
+      - "5432:5432"
+
+  selenium:
+    image: selenium/standalone-chrome:latest
+    ports:
+      - "4444:4444"
+    shm_size: '2g'
+
+  migration:
+    build:
+      dockerfile: Dockerfile_migration
+    depends_on:
+      - postgres
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: luxonis
+      POSTGRES_PSWD: luxonis
+      POSTGRES_DB: sreality
+
+  spider:
+    build:
+      dockerfile: Dockerfile_scraper
+    depends_on:
+      - postgres
+      - migration
+      - selenium
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: luxonis
+      POSTGRES_PSWD: luxonis
+      POSTGRES_DB: sreality
+      WEBDRIVER_HOST: selenium
+      WEBDRIVER_PORT: 4444
+
+  app:
+    build: .
+    depends_on:
+      - spider
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: luxonis
+      POSTGRES_PSWD: luxonis
+      POSTGRES_DB: sreality
+      APP_PORT: 8080
+    ports:
+      - "8080:8080"
